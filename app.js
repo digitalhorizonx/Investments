@@ -20,6 +20,18 @@
     $$('img[alt="Abdullah AlQudah"]').forEach(img=>{img.src='/assets/abdelrhman.jpg';});
   }
 
+  function applyProductProof(){
+    const proof=$('.proof-image img');
+    if(proof){
+      proof.src='/assets/product-proof.svg';
+      proof.alt='Xability product surfaces: wallet, calendar, library, social connections, reports, approvals and campaigns';
+    }
+    const caption=$('.proof-image figcaption');
+    if(caption){
+      caption.innerHTML='<span class="en">Representative product surfaces based on current Xability client workflows: wallet & credits, content calendar, asset library, social connections, performance reports, approvals and campaigns.</span><span class="ar">واجهات تمثيلية مبنية على مسارات Xability الحالية: المحفظة والكريديت، تقويم المحتوى، مكتبة الأصول، ربط الحسابات الاجتماعية، تقارير الأداء، الموافقات والحملات.</span>';
+    }
+  }
+
   function applyLang(){
     const ar=language==='ar';
     body.classList.toggle('rtl',ar);
@@ -31,6 +43,7 @@
 
   applyClarifications();
   applyLeadershipImages();
+  applyProductProof();
   applyLang();
 
   const slots=$('#slots');
