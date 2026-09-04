@@ -15,6 +15,11 @@
     }
   }
 
+  function applyLeadershipImages(){
+    $$('img[alt="Abdelrhman AlQudah"]').forEach(img=>{img.src='/assets/abdullah.jpg';});
+    $$('img[alt="Abdullah AlQudah"]').forEach(img=>{img.src='/assets/abdelrhman.jpg';});
+  }
+
   function applyLang(){
     const ar=language==='ar';
     body.classList.toggle('rtl',ar);
@@ -25,6 +30,7 @@
   }
 
   applyClarifications();
+  applyLeadershipImages();
   applyLang();
 
   const slots=$('#slots');
