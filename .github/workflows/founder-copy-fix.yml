@@ -1,0 +1,51 @@
+name: One-time founder copy fix
+
+on:
+  push:
+    paths:
+      - '.github/workflows/founder-copy-fix.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch-founder-copy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Replace founder introduction
+        shell: python
+        run: |
+          from pathlib import Path
+
+          path = Path('index.html')
+          text = path.read_text(encoding='utf-8')
+
+          old_en = '''Abdelrhman, 29, studied Industrial Engineering at Hashemite University and completed 89 of 160 credit hours before choosing the market over the classroom. In his second university year he founded a digital-marketing company around one principle: <b>“Digital marketing is marketing before it is digital.”</b>'''
+          new_en = '''Abdelrhman, 29, entered entrepreneurship early, founding his first digital-marketing business while still a university student. He built it around one principle: <b>“Digital marketing is marketing before it is digital.”</b>'''
+
+          old_ar = '''عبدالرحمن، 29 عاماً، درس الهندسة الصناعية في الجامعة الهاشمية وأنجز 89 من أصل 160 ساعة قبل أن يختار سوق العمل. وفي سنته الجامعية الثانية أسس شركة تسويق رقمي حول مبدأ: <b>«التسويق الرقمي هو تسويق قبل أن يكون رقمياً.»</b>'''
+          new_ar = '''دخل عبدالرحمن، 29 عاماً، عالم ريادة الأعمال مبكراً، وأسّس أول مشروع له في التسويق الرقمي أثناء دراسته الجامعية. وبنى رؤيته حول مبدأ: <b>«التسويق الرقمي هو تسويق قبل أن يكون رقمياً.»</b>'''
+
+          if text.count(old_en) != 1:
+              raise SystemExit(f'Expected one English founder intro, found {text.count(old_en)}')
+          if text.count(old_ar) != 1:
+              raise SystemExit(f'Expected one Arabic founder intro, found {text.count(old_ar)}')
+
+          text = text.replace(old_en, new_en).replace(old_ar, new_ar)
+          path.write_text(text, encoding='utf-8')
+          Path('.github/workflows/founder-copy-fix.yml').unlink()
+
+      - name: Commit source update and remove one-time workflow
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html .github/workflows/founder-copy-fix.yml
+          git commit -m 'Refine founder bio for investor page'
+          git push
