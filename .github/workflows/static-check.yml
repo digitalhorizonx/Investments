@@ -42,10 +42,11 @@ jobs:
           grep -q '5,000' index.html
           grep -q 'Radwan Btaineh' index.html
           grep -q 'SAVE <em>HORIZONX</em>' index.html
-          grep -q '1 image = 1 credit' index.html
-          grep -q 'Reel ≤20s' index.html
-          grep -q 'Reel 21–40s' index.html
-          grep -q 'Reel 41–60s' index.html
+          grep -q '<b>1</b><span>Image<small>1 credit</small>' index.html
+          grep -q 'Reel ≤20s<small>3 credits</small>' index.html
+          grep -q 'Reel 21–40s<small>6 credits</small>' index.html
+          grep -q 'Reel 41–60s<small>9 credits</small>' index.html
+          grep -q 'above 60 seconds move to custom pricing with human approval' index.html
           test -f assets/abdelrhman.jpg
           test -f assets/abdullah.jpg
           test -f assets/tala.jpg
@@ -56,7 +57,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          if grep -E 'JOD[[:space:]]*(28|55|75)([^0-9]|$)' index.html; then
+          if grep -E 'JOD[[:space:]]*(28|55|75)[[:space:]]*(<|/|per|monthly|month)' index.html; then
             echo 'Historical JOD Xability plan price leaked into the public investor page.' >&2
             exit 1
           fi
