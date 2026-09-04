@@ -1,0 +1,62 @@
+name: Investor site checks
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Check JavaScript syntax
+        run: npm run check
+
+      - name: Validate approved public facts
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -q 'JOD <em>50,000</em>' index.html
+          grep -q 'AGGREGATE CAP' index.html
+          grep -q 'JOD 125K' index.html
+          grep -q '~125' index.html
+          grep -q '~\$10' index.html
+          grep -q '\$22' index.html
+          grep -q '\$40' index.html
+          grep -q '\$79' index.html
+          grep -q '\$109' index.html
+          grep -q 'Jordan' index.html
+          grep -q 'Saudi Arabia' index.html
+          grep -q 'UAE' index.html
+          grep -q '5,000' index.html
+          grep -q 'Radwan Btaineh' index.html
+          grep -q 'SAVE <em>HORIZONX</em>' index.html
+          grep -q '1 image = 1 credit' index.html
+          grep -q 'Reel ≤20s' index.html
+          grep -q 'Reel 21–40s' index.html
+          grep -q 'Reel 41–60s' index.html
+          test -f assets/abdelrhman.jpg
+          test -f assets/abdullah.jpg
+          test -f assets/tala.jpg
+          test -f assets/product-proof.jpg
+          test -f CONTENT_SOURCE_OF_TRUTH.md
+
+      - name: Guard against old public JOD plan pricing
+        shell: bash
+        run: |
+          set -euo pipefail
+          if grep -E 'JOD[[:space:]]*(28|55|75)([^0-9]|$)' index.html; then
+            echo 'Historical JOD Xability plan price leaked into the public investor page.' >&2
+            exit 1
+          fi
