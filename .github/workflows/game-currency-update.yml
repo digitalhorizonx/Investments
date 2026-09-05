@@ -18,14 +18,13 @@ jobs:
           fetch-depth: 0
 
       - name: Patch game speed and currency UI
-        shell: python
+        shell: python {0}
         run: |
           from pathlib import Path
 
           app = Path('app.js')
           text = app.read_text(encoding='utf-8')
 
-          # Moderate speed-up: faster than current build, still below the earlier aggressive tuning.
           text = text.replace(
               "const S={running:false,over:false,score:0,speed:6.2,frame:0,w:1100,h:320,ground:265,next:105,player:{x:175,y:219,vy:0,size:45,on:true},ghost:{x:70},obstacles:[]};",
               "const S={running:false,over:false,score:0,speed:7.35,frame:0,w:1100,h:320,ground:265,next:105,player:{x:175,y:219,vy:0,size:45,on:true},ghost:{x:70},obstacles:[]};"
@@ -132,7 +131,6 @@ jobs:
               raise SystemExit('Could not locate app initialization anchor')
           text = text.replace(anchor, "  applyProductProof();\n  applyLang();" + currency_code + "\n")
 
-          # Make the investment calculator honor the selected display currency.
           old_fmt = "  const fmt=n=>`JOD ${Math.round(n).toLocaleString('en-US')}`;"
           new_fmt = "  const fmt=n=>{const c=window.hxDisplayCurrency||'JOD',r=window.hxFxRates||{JOD:1,USD:1.41044,EUR:1.20};const v=c==='JOD'?n:n*r[c];return c==='JOD'?`JOD ${Math.round(v).toLocaleString('en-US')}`:`${c==='USD'?'$':'€'}${Math.round(v).toLocaleString('en-US')}`};"
           if old_fmt not in text:
