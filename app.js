@@ -111,7 +111,7 @@
   const canvas=$('#runner'), ctx=canvas?.getContext('2d'), overlay=$('#gameOverlay'), play=$('#play'), skip=$('#skip'), milestone=$('#milestone');
   if(!canvas||!ctx)return;
 
-  const S={running:false,over:false,score:0,speed:6.2,frame:0,w:1100,h:320,ground:265,next:105,player:{x:175,y:219,vy:0,size:45,on:true},ghost:{x:70},obstacles:[]};
+  const S={running:false,over:false,score:0,speed:7.35,frame:0,w:1100,h:320,ground:265,next:105,player:{x:175,y:219,vy:0,size:45,on:true},ghost:{x:70},obstacles:[]};
   const marks=[
     [0,'BUILD'],
     [150,'1 YEAR OF LEARNING'],
@@ -130,7 +130,7 @@
     ctx.setTransform(d,0,0,d,0,0);S.ground=S.h-48;
     if(!S.running)S.player.y=S.ground-S.player.size;
   }
-  function reset(){S.score=0;S.speed=6.2;S.frame=0;S.over=false;S.next=90;S.obstacles=[];S.player.y=S.ground-S.player.size;S.player.vy=0;S.player.on=true}
+  function reset(){S.score=0;S.speed=7.35;S.frame=0;S.over=false;S.next=90;S.obstacles=[];S.player.y=S.ground-S.player.size;S.player.vy=0;S.player.on=true}
   function drawX(x,y,s){
     ctx.save();ctx.translate(x,y);ctx.fillStyle='#091f4d';ctx.beginPath();ctx.moveTo(2,3);ctx.lineTo(15,3);ctx.lineTo(s/2,s*.37);ctx.lineTo(s-15,3);ctx.lineTo(s-2,3);ctx.lineTo(s*.62,s/2);ctx.lineTo(s-2,s-3);ctx.lineTo(s-15,s-3);ctx.lineTo(s/2,s*.63);ctx.lineTo(15,s-3);ctx.lineTo(2,s-3);ctx.lineTo(s*.38,s/2);ctx.closePath();ctx.fill();ctx.fillStyle='#fff';ctx.font=`800 ${Math.floor(s*.25)}px Manrope`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('X',s/2,s/2);ctx.restore();
   }
@@ -158,7 +158,7 @@
     for(const o of S.obstacles){ctx.fillStyle='#028393';ctx.fillRect(o.x,S.ground-o.h,o.w,o.h);ctx.fillStyle='#fff';ctx.font='700 7px IBM Plex Mono';ctx.save();ctx.translate(o.x+o.w/2,S.ground-o.h/2);ctx.rotate(-Math.PI/2);ctx.textAlign='center';ctx.fillText(o.label,0,2);ctx.restore()}
     drawX(S.player.x,S.player.y,S.player.size);
     if(S.running){
-      S.frame++;S.score+=.7+S.speed*.018;S.speed=Math.min(12.2,6.2+S.score/480);S.player.vy+=.68;S.player.y+=S.player.vy;
+      S.frame++;S.score+=.74+S.speed*.019;S.speed=Math.min(13.6,7.35+S.score/560);S.player.vy+=.68;S.player.y+=S.player.vy;
       if(S.player.y>=S.ground-S.player.size){S.player.y=S.ground-S.player.size;S.player.vy=0;S.player.on=true}
       if(S.frame>=S.next)spawn();
       S.obstacles.forEach(o=>o.x-=S.speed);S.obstacles=S.obstacles.filter(o=>o.x>-60);
