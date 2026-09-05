@@ -1,0 +1,159 @@
+name: One-time game speed and currency update
+
+on:
+  push:
+    paths:
+      - '.github/workflows/game-currency-update.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch-site:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Patch game speed and currency UI
+        shell: python
+        run: |
+          from pathlib import Path
+
+          app = Path('app.js')
+          text = app.read_text(encoding='utf-8')
+
+          # Moderate speed-up: faster than current build, still below the earlier aggressive tuning.
+          text = text.replace(
+              "const S={running:false,over:false,score:0,speed:6.2,frame:0,w:1100,h:320,ground:265,next:105,player:{x:175,y:219,vy:0,size:45,on:true},ghost:{x:70},obstacles:[]};",
+              "const S={running:false,over:false,score:0,speed:7.35,frame:0,w:1100,h:320,ground:265,next:105,player:{x:175,y:219,vy:0,size:45,on:true},ghost:{x:70},obstacles:[]};"
+          )
+          text = text.replace(
+              "function reset(){S.score=0;S.speed=6.2;S.frame=0;S.over=false;S.next=90;S.obstacles=[];S.player.y=S.ground-S.player.size;S.player.vy=0;S.player.on=true}",
+              "function reset(){S.score=0;S.speed=7.35;S.frame=0;S.over=false;S.next=90;S.obstacles=[];S.player.y=S.ground-S.player.size;S.player.vy=0;S.player.on=true}"
+          )
+          text = text.replace(
+              "S.frame++;S.score+=.7+S.speed*.018;S.speed=Math.min(12.2,6.2+S.score/480);",
+              "S.frame++;S.score+=.74+S.speed*.019;S.speed=Math.min(13.6,7.35+S.score/560);"
+          )
+
+          anchor = "  applyProductProof();\n  applyLang();\n"
+          currency_code = r'''
+
+  function installCurrencySelector(){
+    const actions=$('.actions');
+    if(!actions || $('#currencySelect')) return;
+
+    const box=document.createElement('label');
+    box.className='currency-switch';
+    box.innerHTML='<span class="currency-label"><span class="en">Currency</span><span class="ar">العملة</span></span><select id="currencySelect" aria-label="Display currency"><option value="JOD">JOD</option><option value="USD">USD</option><option value="EUR">EUR</option></select>';
+    actions.insertBefore(box, langBtn);
+
+    const style=document.createElement('style');
+    style.textContent=`
+      .currency-switch{display:flex;align-items:center;gap:6px;padding:5px 7px 5px 10px;border:1px solid var(--line);border-radius:999px;background:rgba(255,255,255,.45)}
+      .currency-label{font:700 8px "IBM Plex Mono",monospace;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+      .currency-switch select{border:0;background:transparent;color:var(--ink);font:800 10px Manrope,system-ui;outline:none;padding:3px 16px 3px 2px}
+      .fx-note{display:block;margin-top:7px;font-size:8px;line-height:1.5;color:var(--muted)}
+      .rtl .currency-switch{padding:5px 10px 5px 7px}
+      @media(max-width:760px){.currency-label{display:none}.currency-switch{padding:5px 7px}.currency-switch select{padding-right:12px}.topbar .actions{gap:5px}}
+    `;
+    document.head.appendChild(style);
+
+    const select=$('#currencySelect');
+    const stored=localStorage.getItem('hx-invest-currency');
+    if(stored && ['JOD','USD','EUR'].includes(stored)) select.value=stored;
+
+    const base={JOD:1,USD:1.41044,EUR:1.20};
+    let rates={...base};
+
+    const moneyTargets=[];
+    const register=(selector,amount,source='JOD',formatter=null)=>{
+      $$(selector).forEach(el=>moneyTargets.push({el,amount,source,formatter,original:el.textContent}));
+    };
+
+    register('.hero-stats > span:first-child > b',50000,'JOD',(v,c)=>c==='JOD'?'JOD 50K':`${c} ${Math.round(v/100)/10}K`);
+    register('.round-hero h2 em',50000,'JOD');
+    register('.terms article:nth-child(1) h3',2000,'JOD');
+    register('.terms article:nth-child(4) h3',125000,'JOD');
+
+    const useFundValues=[22500,10000,7500,5000,5000];
+    $$('.funds article b').forEach((el,i)=>{
+      if(useFundValues[i]!=null) moneyTargets.push({el,amount:useFundValues[i],source:'JOD',formatter:null,original:el.textContent});
+    });
+
+    const fx=(amount,source,target)=>{
+      if(source===target)return amount;
+      const inJod=source==='JOD'?amount:amount/rates[source];
+      return target==='JOD'?inJod:inJod*rates[target];
+    };
+    const format=(v,c)=>{
+      if(c==='JOD')return `JOD ${Math.round(v).toLocaleString('en-US')}`;
+      const symbol=c==='USD'?'$':'€';
+      return `${symbol}${Math.round(v).toLocaleString('en-US')}`;
+    };
+    const renderMoney=()=>{
+      const c=select.value;
+      localStorage.setItem('hx-invest-currency',c);
+      moneyTargets.forEach(t=>{
+        const value=fx(t.amount,t.source,c);
+        t.el.textContent=t.formatter?t.formatter(value,c):format(value,c);
+      });
+      window.hxDisplayCurrency=c;
+      window.hxFxRates=rates;
+      window.dispatchEvent(new CustomEvent('hx-currency-change',{detail:{currency:c,rates}}));
+    };
+
+    select.addEventListener('change',renderMoney);
+    renderMoney();
+
+    const note=document.createElement('small');
+    note.className='fx-note';
+    note.innerHTML='<span class="en">Investment terms are denominated in JOD. USD/EUR are indicative display conversions only.</span><span class="ar">شروط الاستثمار مقوّمة بالدينار الأردني. الدولار واليورو للعرض التحويلي التقريبي فقط.</span>';
+    const round=$('#round .wrap')||$('#round');
+    round?.appendChild(note);
+
+    fetch('https://open.er-api.com/v6/latest/JOD',{cache:'no-store'})
+      .then(r=>r.ok?r.json():Promise.reject())
+      .then(data=>{
+        if(data?.rates?.USD && data?.rates?.EUR){
+          rates={JOD:1,USD:Number(data.rates.USD),EUR:Number(data.rates.EUR)};
+          renderMoney();
+        }
+      })
+      .catch(()=>{});
+  }
+
+  installCurrencySelector();
+'''
+          if anchor not in text:
+              raise SystemExit('Could not locate app initialization anchor')
+          text = text.replace(anchor, "  applyProductProof();\n  applyLang();" + currency_code + "\n")
+
+          # Make the investment calculator honor the selected display currency.
+          old_fmt = "  const fmt=n=>`JOD ${Math.round(n).toLocaleString('en-US')}`;"
+          new_fmt = "  const fmt=n=>{const c=window.hxDisplayCurrency||'JOD',r=window.hxFxRates||{JOD:1,USD:1.41044,EUR:1.20};const v=c==='JOD'?n:n*r[c];return c==='JOD'?`JOD ${Math.round(v).toLocaleString('en-US')}`:`${c==='USD'?'$':'€'}${Math.round(v).toLocaleString('en-US')}`};"
+          if old_fmt not in text:
+              raise SystemExit('Could not locate calculator formatter')
+          text = text.replace(old_fmt,new_fmt)
+
+          old_events = "  slotRange?.addEventListener('input',calc);\n  revRange?.addEventListener('input',calc);\n  calc();"
+          new_events = "  slotRange?.addEventListener('input',calc);\n  revRange?.addEventListener('input',calc);\n  window.addEventListener('hx-currency-change',calc);\n  calc();"
+          if old_events not in text:
+              raise SystemExit('Could not locate calculator events')
+          text = text.replace(old_events,new_events)
+
+          app.write_text(text,encoding='utf-8')
+          Path('.github/workflows/game-currency-update.yml').unlink()
+
+      - name: Commit update and remove one-time workflow
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add app.js .github/workflows/game-currency-update.yml
+          git commit -m 'Tune runner speed and add investor currency selector'
+          git push
