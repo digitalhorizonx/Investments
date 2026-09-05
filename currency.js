@@ -24,33 +24,80 @@
   if(['JOD','USD','EUR'].includes(saved)) select.value=saved;
 
   let rates={JOD:1,USD:1.4104,EUR:1.20};
-  const targets=[];
-  const add=(selector,amount,format)=>$$(selector).forEach(el=>targets.push({el,amount,format}));
-
-  add('.hero-stats > span:first-child > b',50000,(v,c)=>c==='JOD'?'JOD 50K':`${c} ${(v/1000).toFixed(1)}K`);
-  add('.round-hero h2 em',50000);
-  add('.terms article:nth-child(1) h3',2000);
-  add('.terms article:nth-child(4) h3',125000);
-
-  const fundValues=[22500,10000,7500,5000,5000];
-  $$('.funds article b').forEach((el,i)=>{if(fundValues[i]!=null)targets.push({el,amount:fundValues[i]});});
 
   const convert=(amount,c)=>c==='JOD'?amount:amount*rates[c];
   const money=(value,c)=>c==='JOD'?`JOD ${Math.round(value).toLocaleString('en-US')}`:`${c==='USD'?'$':'€'}${Math.round(value).toLocaleString('en-US')}`;
+  const compact=(value,c)=>{
+    if(c==='JOD') return `JOD ${(value/1000).toFixed(value%1000?1:0)}K`;
+    const symbol=c==='USD'?'$':'€';
+    return `${symbol}${(value/1000).toFixed(1)}K`;
+  };
+
+  function renderStatic(c){
+    const hero=$('.hero-stats > span:first-child > b');
+    if(hero) hero.textContent=compact(convert(50000,c),c);
+
+    const roundTotal=$('.round-hero h2');
+    if(roundTotal) roundTotal.textContent=money(convert(50000,c),c);
+
+    const slotPrice=$('.slot-price b');
+    if(slotPrice) slotPrice.textContent=money(convert(2000,c),c);
+
+    const slotMath=$('.slot-price > span');
+    if(slotMath){
+      const each=money(convert(2000,c),c);
+      const total=money(convert(50000,c),c);
+      slotMath.textContent=`25 × ${each} = ${total}`;
+    }
+
+    const cap=$$('.terms article').find(a=>a.querySelector('small')?.textContent.trim()==='AGGREGATE CAP')?.querySelector('b');
+    if(cap) cap.textContent=money(convert(125000,c),c);
+
+    const allocation=[30000,7500,5000,5000,2500];
+    $$('.alloc article small').forEach((el,i)=>{
+      if(allocation[i]!=null) el.textContent=money(convert(allocation[i],c),c);
+    });
+  }
+
+  function renderCalculator(c){
+    const slotRange=$('#slotRange'), revRange=$('#revRange');
+    if(!slotRange||!revRange) return;
+    const slots=Number(slotRange.value||1);
+    const revenueJod=Number(revRange.value||300000);
+    const investmentJod=slots*2000;
+    const poolJod=Math.min(revenueJod*.25,125000);
+    const distributionJod=poolJod*(slots/25);
+    const netJod=distributionJod-investmentJod;
+    const multiple=distributionJod/investmentJod;
+
+    const revOut=$('#revOut'), investRes=$('#investRes'), poolRes=$('#poolRes'), distRes=$('#distRes');
+    if(revOut) revOut.textContent=money(convert(revenueJod,c),c);
+    if(investRes) investRes.textContent=money(convert(investmentJod,c),c);
+    if(poolRes) poolRes.textContent=money(convert(poolJod,c),c);
+    if(distRes) distRes.textContent=money(convert(distributionJod,c),c);
+
+    const detail=distRes?.parentElement?.querySelector('.calc-detail');
+    if(detail){
+      const net=money(Math.abs(convert(netJod,c)),c);
+      detail.textContent=document.body.classList.contains('rtl')
+        ? `${netJod>=0?'+':'−'}${net} صافي · ${multiple.toFixed(2)}× إجمالي المبلغ المستلم`
+        : `${netJod>=0?'+':'−'}${net} net · ${multiple.toFixed(2)}× total cash returned`;
+    }
+  }
 
   function render(){
     const c=select.value;
     localStorage.setItem('hx-invest-currency',c);
-    targets.forEach(t=>{
-      const v=convert(t.amount,c);
-      t.el.textContent=t.format?t.format(v,c):money(v,c);
-    });
+    renderStatic(c);
+    renderCalculator(c);
     window.hxDisplayCurrency=c;
     window.hxFxRates=rates;
-    window.dispatchEvent(new CustomEvent('hx-currency-change',{detail:{currency:c,rates}}));
   }
 
   select.addEventListener('change',render);
+  $('#slotRange')?.addEventListener('input',()=>setTimeout(render,0));
+  $('#revRange')?.addEventListener('input',()=>setTimeout(render,0));
+  $('#lang')?.addEventListener('click',()=>setTimeout(render,0));
   render();
 
   const note=document.createElement('small');
