@@ -144,7 +144,7 @@
 
   play?.addEventListener('click',start);
   skip?.addEventListener('click',()=>$('#why')?.scrollIntoView({behavior:'smooth'}));
-  canvas.addEventListener('pointerdown',jump);
+  canvas.parentElement?.addEventListener('pointerdown',jump);
   addEventListener('keydown',e=>{if(e.code==='Space'||e.code==='ArrowUp'){e.preventDefault();jump()}});
   addEventListener('resize',resize);
   resize();reset();
