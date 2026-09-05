@@ -111,7 +111,7 @@
   const canvas=$('#runner'), ctx=canvas?.getContext('2d'), overlay=$('#gameOverlay'), play=$('#play'), skip=$('#skip'), milestone=$('#milestone');
   if(!canvas||!ctx)return;
 
-  const S={running:false,over:false,score:0,speed:7.35,frame:0,w:1100,h:320,ground:265,next:105,player:{x:175,y:219,vy:0,size:45,on:true},ghost:{x:70},obstacles:[]};
+  const S={running:false,over:false,score:0,speed:8.35,frame:0,w:1100,h:320,ground:265,next:105,player:{x:175,y:219,vy:0,size:45,on:true},ghost:{x:70},obstacles:[]};
   const marks=[
     [0,'BUILD'],
     [150,'1 YEAR OF LEARNING'],
@@ -130,14 +130,14 @@
     ctx.setTransform(d,0,0,d,0,0);S.ground=S.h-48;
     if(!S.running)S.player.y=S.ground-S.player.size;
   }
-  function reset(){S.score=0;S.speed=7.35;S.frame=0;S.over=false;S.next=90;S.obstacles=[];S.player.y=S.ground-S.player.size;S.player.vy=0;S.player.on=true}
+  function reset(){S.score=0;S.speed=8.35;S.frame=0;S.over=false;S.next=90;S.obstacles=[];S.player.y=S.ground-S.player.size;S.player.vy=0;S.player.on=true}
   function drawX(x,y,s){
     ctx.save();ctx.translate(x,y);ctx.fillStyle='#091f4d';ctx.beginPath();ctx.moveTo(2,3);ctx.lineTo(15,3);ctx.lineTo(s/2,s*.37);ctx.lineTo(s-15,3);ctx.lineTo(s-2,3);ctx.lineTo(s*.62,s/2);ctx.lineTo(s-2,s-3);ctx.lineTo(s-15,s-3);ctx.lineTo(s/2,s*.63);ctx.lineTo(15,s-3);ctx.lineTo(2,s-3);ctx.lineTo(s*.38,s/2);ctx.closePath();ctx.fill();ctx.fillStyle='#fff';ctx.font=`800 ${Math.floor(s*.25)}px Manrope`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('X',s/2,s/2);ctx.restore();
   }
   function drawGhost(x,y,t){
     ctx.save();ctx.translate(x,y+Math.sin(t/12)*4);ctx.fillStyle='#f9351a';ctx.beginPath();ctx.arc(18,18,17,Math.PI,0);ctx.lineTo(35,46);ctx.lineTo(27,40);ctx.lineTo(19,46);ctx.lineTo(10,40);ctx.lineTo(2,46);ctx.lineTo(2,18);ctx.closePath();ctx.fill();ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(12,17,3,0,Math.PI*2);ctx.arc(24,17,3,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#091f4d';ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(33,37);ctx.lineTo(49,25);ctx.stroke();ctx.strokeStyle='#757b86';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(48,25);ctx.lineTo(58,17);ctx.stroke();ctx.restore();
   }
-  function spawn(){const tall=Math.random()>.55;S.obstacles.push({x:S.w+25,w:tall?22:36,h:tall?56:34,label:Math.random()>.5?'TIME':'NOISE'});S.next=S.frame+80+Math.floor(Math.random()*80)}
+  function spawn(){const tall=Math.random()>.55;S.obstacles.push({x:S.w+25,w:tall?22:36,h:tall?56:34,label:Math.random()>.5?'TIME':'NOISE'});S.next=S.frame+52+Math.floor(Math.random()*58)}
   function start(){reset();S.running=true;overlay?.classList.add('hidden');if(play)play.innerHTML=language==='ar'?'<span class="ar">إعادة</span>':'<span class="en">RESTART</span>'}
   function end(){S.running=false;S.over=true;overlay?.classList.remove('hidden');const b=overlay?.querySelector('b');if(b)b.innerHTML=language==='ar'?'<span class="ar">الوقت لحق بك. أعد المحاولة — أو أكمل قصة الاستثمار.</span>':'<span class="en">Time caught you. Run again — or continue the investment story.</span>'}
   function jump(){if(!S.running){start();return}if(S.player.on){S.player.vy=-12.2;S.player.on=false}}
@@ -158,7 +158,7 @@
     for(const o of S.obstacles){ctx.fillStyle='#028393';ctx.fillRect(o.x,S.ground-o.h,o.w,o.h);ctx.fillStyle='#fff';ctx.font='700 7px IBM Plex Mono';ctx.save();ctx.translate(o.x+o.w/2,S.ground-o.h/2);ctx.rotate(-Math.PI/2);ctx.textAlign='center';ctx.fillText(o.label,0,2);ctx.restore()}
     drawX(S.player.x,S.player.y,S.player.size);
     if(S.running){
-      S.frame++;S.score+=.74+S.speed*.019;S.speed=Math.min(13.6,7.35+S.score/560);S.player.vy+=.68;S.player.y+=S.player.vy;
+      S.frame++;S.score+=.80+S.speed*.020;S.speed=Math.min(14.8,8.35+S.score/600);S.player.vy+=.68;S.player.y+=S.player.vy;
       if(S.player.y>=S.ground-S.player.size){S.player.y=S.ground-S.player.size;S.player.vy=0;S.player.on=true}
       if(S.frame>=S.next)spawn();
       S.obstacles.forEach(o=>o.x-=S.speed);S.obstacles=S.obstacles.filter(o=>o.x>-60);
